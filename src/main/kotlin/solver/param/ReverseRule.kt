@@ -26,6 +26,7 @@ private val intTypes = setOf(
 private val doubleTypes = setOf(
     Float32Type::class.java,
     Float64Type::class.java,
+    RealType::class.java
 )
 
 private val boolTypes = setOf(BoolType::class.java)

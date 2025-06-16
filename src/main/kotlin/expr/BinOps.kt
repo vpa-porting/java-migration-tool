@@ -87,7 +87,6 @@ object BinOps {
         if (left == null || right == null) throw IllegalArgumentException("Binary operation with void")
         val leftCl = left::class.java
         val rightCl = right::class.java
-        if (leftCl != rightCl) throw IllegalArgumentException("")
         if (intTypes.contains(leftCl) && intOps.contains(op)) return left
         if (arithTypes.contains(leftCl) && arithOps.contains(op)) return left
         if (arithTypes.contains(leftCl) && cmpOps.contains(op)) return BoolType(LSL_CTX)

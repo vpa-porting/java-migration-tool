@@ -87,7 +87,7 @@ private val reverseMap1: Map<String, String> = mapOf(
         srcArg: LExpr, solArg: LExpr,
         srcTr: Trace, solTr: Trace,
     ): Pair<LExpr, LExpr> {
-        if (srcArg.isLiteral() || solArg.isLiteral()) return srcArg to solArg
+        if (solArg.isLiteral()) return srcArg to solArg
         if (isTraceArgument(solArg, solTr)) return srcArg to solArg
 
         if (solArg is LUnOp && reverseMap1.containsKey(solArg.op)) {

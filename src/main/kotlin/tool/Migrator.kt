@@ -48,7 +48,7 @@ fun migrate(
                 if (func != null) {
                     val solved = Solver.solve(func, toLib.libFunctions)
                     if (solved.isNullOrEmpty()) {
-                        println("Can't replace function $solved")
+                        println("Can't replace function $func")
                         return
                     } else {
                         val rootNode = mkGenNode(solved[0]) ?: return
