@@ -2,6 +2,7 @@ package porting.expr
 
 import io.ksmt.expr.KExpr
 import io.ksmt.sort.KArraySort
+import io.ksmt.sort.KBvSort
 import io.ksmt.sort.KIntSort
 import io.ksmt.sort.KSort
 import org.jetbrains.research.libsl.type.*
@@ -120,7 +121,24 @@ data class LBinOp(val left: LExpr, val op: String, val right: LExpr) : LExpr() {
     override fun toSMT(ctx: SMTContext): ExprSMT {
         val left = left.toSMT(ctx)
         val right = right.toSMT(ctx)
-        return ExprSMT(this, BinOps.mkOp(ctx, op, left.smt(), right.smt()))
+        var a: KExpr<out KSort> = left.smt()
+        var b: KExpr<out KSort> = right.smt()
+        // Java promotes char operands to int (or long), zero-extending char.
+        // This also makes comparisons above U+7FFF agree with Java semantics.
+        if (a.sort is KBvSort && b.sort is KBvSort &&
+            (this.left.type() is CharType || this.right.type() is CharType)) {
+            val width = maxOf(32, (a.sort as KBvSort).sizeBits.toInt(), (b.sort as KBvSort).sizeBits.toInt())
+            @Suppress("UNCHECKED_CAST")
+            fun promote(expr: KExpr<out KSort>, unsigned: Boolean): KExpr<out KSort> {
+                val value = expr as KExpr<KBvSort>
+                val extra = width - value.sort.sizeBits.toInt()
+                return if (extra == 0) value else if (unsigned) ctx.mkBvZeroExtensionExpr(extra, value)
+                else ctx.mkBvSignExtensionExpr(extra, value)
+            }
+            a = promote(a, this.left.type() is CharType)
+            b = promote(b, this.right.type() is CharType)
+        }
+        return ExprSMT(this, BinOps.mkOp(ctx, op, a, b))
     }
 
     override fun type(): Type {
@@ -141,7 +159,16 @@ data class LBinOp(val left: LExpr, val op: String, val right: LExpr) : LExpr() {
     }
 
     override fun toJavaStr(varMap: Map<LVar, String>): String {
-        return "(${left.toJavaStr(varMap)} $op ${right.toJavaStr(varMap)})"
+        // Enum-typed values are modeled as their declared ordinal ints for SMT purposes (see
+        // PreBuilder.enumConstantValue - `Hex.HexCase.UPPER` resolves to a bare int literal, e.g.
+        // `1`), which is sound for the solver but not valid Java: a real `HexCase`-typed variable
+        // can't be compared against `int` directly. Route it through `.ordinal()` only in the
+        // generated text, not in the SMT encoding. `.type()` is only meaningful (and only safe -
+        // BinOps.type() throws for some operator/operand shapes that never needed a combined type
+        // before) for leaf-ish expressions here, so failures just mean "not an enum".
+        val leftStr = left.toJavaStr(varMap).let { if (runCatching { left.type() }.getOrNull() is EnumType) "$it.ordinal()" else it }
+        val rightStr = right.toJavaStr(varMap).let { if (runCatching { right.type() }.getOrNull() is EnumType) "$it.ordinal()" else it }
+        return "($leftStr $op $rightStr)"
     }
 }
 
@@ -157,12 +184,12 @@ data class LBool(val value: Boolean) : LExpr() {
 
 data class LChar(val value: Char) : LExpr() {
     override fun toString(): String = "'$value'"
-    override fun toSMT(ctx: SMTContext): ExprSMT = ExprSMT(this, ctx.mkBv(value.code))
+    override fun toSMT(ctx: SMTContext): ExprSMT = ExprSMT(this, ctx.mkBv(value.code.toShort()))
     override fun isLiteral() = true
     override fun type(): Type = CharType(LSL_CTX)
     override fun replaceVar(predicate: (LVar) -> Boolean, rule: (LVar) -> LExpr?) = this
     override fun collectVars(vars: MutableSet<LVar>) {}
-    override fun toJavaStr(varMap: Map<LVar, String>): String = value.toString()
+    override fun toJavaStr(varMap: Map<LVar, String>): String = "(char) 0x%04x".format(value.code)
 }
 
 data class LFloat(val value: Double) : LExpr() {
