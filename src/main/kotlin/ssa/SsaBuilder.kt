@@ -5,6 +5,13 @@ import porting.expr.LBool
 import porting.expr.LVar
 import porting.pre.*
 
+/**
+ * An action whose name starts with this prefix stands for "the call ends by throwing" (the target
+ * side realizes it with `@JavaThrow`, see gen/Generator.kt). Nothing after it runs, so the rest of
+ * the block is dead code and is dropped - in particular an unassigned `result` is never read.
+ */
+const val THROW_ACTION_PREFIX = "THROW_"
+
 class SsaBuilder {
 
     private val ctx = SsaCtx()
@@ -35,7 +42,10 @@ class SsaBuilder {
     private fun buildBlock(ctx: SsaCtx, result: BasicBlock, statBlock: List<PStat>) {
         for (i in statBlock.indices) {
             when (val stat = statBlock[i]) {
-                is PActionResult -> buildActionResultStat(ctx, result, stat)
+                is PActionResult -> {
+                    buildActionResultStat(ctx, result, stat)
+                    if (stat.value.actionName.startsWith(THROW_ACTION_PREFIX)) return
+                }
                 is PAssign -> buildAssignStat(ctx, result, stat)
                 is PDecl -> buildDeclStat(ctx, stat)
                 is PIf -> {

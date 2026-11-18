@@ -28,6 +28,13 @@ object TraceSolver {
     }
 
     private fun solve(source: Trace, traces: List<Trace>): List<TraceSolution> {
+        // A path without any action (e.g. only `result = null`) needs no target call at all.
+        if (source.actions.isEmpty()) return listOf(TraceSolution(source, emptyList()))
+        // Trace matching concatenates action sequences: an action absent from every
+        // candidate cannot be synthesized, regardless of the sequence length.
+        val availableActions = traces.flatMap { it.actions }.map { it.value.actionName }.toSet()
+        if (source.actions.any { it.value.actionName !in availableActions }) return emptyList()
+
         val actionToNum = (source.actions + traces.flatMap { it.actions })
             .map { it.value.actionName }
             .distinct()

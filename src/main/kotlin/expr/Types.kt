@@ -46,7 +46,7 @@ fun PrimitiveType.sort(ctx: SMTContext): KSort {
         is AnyType -> ctx.anySort
         is NothingType -> ctx.nothingSort
         is VoidType -> ctx.voidSort
-        is CharType -> ctx.bv8Sort
+        is CharType -> ctx.bv16Sort // Java char is an unsigned UTF-16 code unit.
         is BoolType -> ctx.boolSort
         is Int8Type -> ctx.bv8Sort
         is Int16Type -> ctx.bv16Sort

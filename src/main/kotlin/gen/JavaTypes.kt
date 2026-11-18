@@ -28,14 +28,18 @@ fun Type?.toJavaType(): String {
         is ListType -> {
             if (this.generics.size != 1) throw Exception()
             val type = this.generics[0].toJavaType()
-            return "List<$type>"
+            // Fully-qualified: Migrator.kt only adds imports for the automata involved in a
+            // solution, never for java.util.List/Map used as a generated method's own
+            // return/param type - a bare `List<T>` here compiled to nothing (verified: this broke
+            // the guava-jdk9-collections output for real, "cannot find symbol: class List").
+            return "java.util.List<$type>"
         }
 
         is MapType -> {
             if (this.generics.size != 2) throw Exception()
             val keyType = this.generics[0].toJavaType()
             val valueType = this.generics[1].toJavaType()
-            return "Map<$keyType, $valueType>"
+            return "java.util.Map<$keyType, $valueType>"
         }
 
         is RealType -> this.toJavaType()

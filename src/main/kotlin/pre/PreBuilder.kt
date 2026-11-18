@@ -3,6 +3,7 @@ package porting.pre
 import org.jetbrains.research.libsl.nodes.*
 import org.jetbrains.research.libsl.nodes.Function
 import org.jetbrains.research.libsl.nodes.references.TypeReference
+import org.jetbrains.research.libsl.type.EnumType
 import org.jetbrains.research.libsl.type.Type
 import org.jetbrains.research.libsl.type.TypeAlias
 import porting.RESULT
@@ -16,7 +17,11 @@ class PreBuilder {
     fun processFunction(func: Function, automaton: Automaton): PFunc {
         val internalVars = mutableSetOf<String>()
         val ctx = PreCtx(internal = internalVars)
-        ctx.procStack.addLast(func.name)
+        // All candidate traces share an SMT context. Bare method names alias variables
+        // across classes and overloads (e.g. toJSONString(List) and toJSONString(JSONStyle)).
+        // Scope both arguments and temporaries by the complete specification signature.
+        val signature = func.args.joinToString(",") { it.typeReference.toString() }
+        ctx.procStack.addLast("${automaton.name}.${func.name}($signature)")
 
         val internalBlock = mutableListOf<PStat>()
         automaton.internalVariables.forEach { v ->
@@ -212,9 +217,11 @@ class PreBuilder {
 
             // Operations
             is BinaryOpExpression -> LBinOp(
-                buildExpr(ctx, automaton, block, expr.left),
+                enumConstantValue(ctx, automaton, block, expr.left, expr.right)
+                    ?: buildExpr(ctx, automaton, block, expr.left),
                 expr.op.string,
-                buildExpr(ctx, automaton, block, expr.right)
+                enumConstantValue(ctx, automaton, block, expr.right, expr.left)
+                    ?: buildExpr(ctx, automaton, block, expr.right)
             )
 
             is UnaryOpExpression -> {
@@ -257,6 +264,52 @@ class PreBuilder {
             is FunctionUsageExpression -> TODO("Not supported yet")
             is ProcExpression -> processProcedureCall(ctx, automaton, block, expr.procedureCall)
         }
+    }
+
+    // Walks a dotted qualified-access chain (e.g. `net.lbruun.hexutils.Hex.HexCase.UPPER`) into its
+    // segment names. LibSL's parser represents this purely syntactically as nested VariableAccess
+    // hops - there is no dedicated "enum constant reference" node - so a chain like this is
+    // otherwise indistinguishable from an unresolved multi-part variable name.
+    private fun chainSegments(expr: Expression): List<String>? {
+        if (expr !is VariableAccess) return null
+        val segments = mutableListOf(expr.fieldName)
+        var cur = expr.childAccess
+        while (cur != null) {
+            if (cur !is VariableAccess) return null
+            segments.add(cur.fieldName)
+            cur = cur.childAccess
+        }
+        return segments
+    }
+
+    private fun exprType(ctx: PreCtx, expr: Expression): Type? = when (expr) {
+        is Variable -> expr.typeReference.type()
+        is VariableAccess -> if (expr.childAccess != null) null else {
+            val resolved = expr.variable.resolve()
+            if (resolved != null) resolved.variable(ctx).type else ctx.type(ctx[expr.variable.name])
+        }
+        else -> null
+    }
+
+    /** Resolves a dotted qualified-access expression like `net.lbruun.hexutils.Hex.HexCase.UPPER`
+     * to the literal declared for that entry (`enum ... { UPPER = 1; }`), when [other] - the other
+     * side of a `==`/`!=` comparison - resolves to that enum type. Since the parser has no notion
+     * of "this chain names an enum constant," the only way to know which *trailing* segment is the
+     * entry name (as opposed to a package/type qualifier) is to check it against the enum type
+     * inferred from the comparison's other operand - this does not attempt to resolve the whole
+     * qualified name as a type path on its own.
+     */
+    private fun enumConstantValue(
+        ctx: PreCtx,
+        automaton: Automaton,
+        block: MutableList<PStat>,
+        self: Expression,
+        other: Expression
+    ): LExpr? {
+        val entryName = chainSegments(self)?.lastOrNull() ?: return null
+        val enumType = exprType(ctx, other) as? EnumType ?: return null
+        val entry = enumType.entries[entryName] ?: return null
+        return buildExpr(ctx, automaton, block, entry)
     }
 
     private fun mkVar(ctx: PreCtx, variable: Variable): LVar {

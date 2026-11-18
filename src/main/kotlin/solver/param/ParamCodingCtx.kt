@@ -53,6 +53,7 @@ private val reverseMap1: Map<String, String> = mapOf(
 
     fun mkParamFormula() {
         var sourceActionInd = 0
+        var sourceConditionInd = 0
         val formula = mutableListOf<KBoolExpr>()
 
         formula.addAll(sourceF.conditions.map { it.bool() })
@@ -61,6 +62,17 @@ private val reverseMap1: Map<String, String> = mapOf(
             if (solTrace.result != null) {
                 val (srcName, srcVal) = rewrite(solTrace.result!!.name, solTrace.result!!.value, source, solTrace)
                 resultEquations.add(srcName to srcVal)
+            }
+            // A target trace's own Condition steps gate its branch (e.g. `if (!condition)` inside
+            // the matched target function). Without relating them back to the source's matching
+            // conditions, any target argument used ONLY inside such a condition never appears in
+            // any action/result equation, so collectParamSolution() treats it as "unused" and
+            // silently defaults it (e.g. always `false`) instead of deriving the correct value.
+            for (solCond in solTrace.conditions) {
+                if (sourceConditionInd >= source.conditions.size) break
+                val srcCond = source.conditions[sourceConditionInd++]
+                val (newSrc, newSol) = rewrite(srcCond, solCond, source, solTrace)
+                argsEquations.add(newSrc to newSol)
             }
             for (solAction in solTrace.actions) {
                 val srcAction = source.actions[sourceActionInd++]

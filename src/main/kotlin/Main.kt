@@ -5,45 +5,55 @@ import porting.tool.migrate
 import java.nio.file.Path
 
 const val LIBSL_PATH = "TestSpecs"
-const val FILE_LIB1_PATH = "$LIBSL_PATH/file-lib1.lsl"
-const val FILE_LIB2_PATH = "$LIBSL_PATH/file-lib2.lsl"
-const val MATH_LIB1_PATH = "$LIBSL_PATH/math-lib1.lsl"
-const val MATH_LIB2_PATH = "$LIBSL_PATH/math-lib2.lsl"
-
 const val PROJECTS_PATH = "TestProjects"
-const val FILE_PROJECT = "$PROJECTS_PATH/FileProject"
-const val MATH_PROJECT = "$PROJECTS_PATH/MathProject"
-
 const val OUTPUT_PATH = "TestMigrated"
-const val FILE_PROJECT_MIGRATED = "$OUTPUT_PATH/FileProject_migrated"
-const val MATH_PROJECT_MIGRATED = "$OUTPUT_PATH/MathProject_migrated"
 
-fun main() {
-//    testMigration(
-//        FILE_PROJECT,
-//        FILE_PROJECT_MIGRATED,
-//        FILE_LIB1_PATH,
-//        FILE_LIB2_PATH
-//    )
-    testMigration(
-        MATH_PROJECT,
-        MATH_PROJECT_MIGRATED,
-        MATH_LIB1_PATH,
-        MATH_LIB2_PATH
-    )
+data class MigrationCase(
+    val name: String,
+    val sourceProject: String,
+    val sourceLib: String,
+    val targetLib: String,
+)
+
+val CASES = listOf(
+    MigrationCase(
+        name = "math",
+        sourceProject = "MathProject",
+        sourceLib = "math-lib1.lsl",
+        targetLib = "math-lib2.lsl",
+    ),
+    MigrationCase(
+        name = "file",
+        sourceProject = "FileProject",
+        sourceLib = "file-lib1.lsl",
+        targetLib = "file-lib2.lsl",
+    ),
+)
+
+fun main(args: Array<String>) {
+    val requested = args.toList()
+    val cases = if (requested.isEmpty()) CASES else CASES.filter { it.name in requested }
+
+    if (cases.isEmpty()) {
+        println("No matching migration case for arguments $requested. Available: ${CASES.map { it.name }}; json-simple-full <project> <output>")
+        return
+    }
+
+    for (case in cases) {
+        println("=== Running migration case '${case.name}' ===")
+        runMigrationCase(case)
+    }
 }
 
-private fun testMigration(
-    sourceProjectPath: String,
-    outputProjectPath: String,
-    sourceLibPath: String,
-    targetLibPath: String,
-) {
-    val sourceLib = LSLParser.parse(LIBSL_PATH, sourceLibPath)
-    val targetLib = LSLParser.parse(LIBSL_PATH, targetLibPath)
+private fun runMigrationCase(case: MigrationCase) {
+    if (case.name.startsWith("json-simple")) {
+        println("Experimental approximate SMT case; not a complete json-simple migration. The legacy json-simple-full mode relocates source code and does not migrate to another library.")
+    }
+    val sourceLib = LSLParser.parse(LIBSL_PATH, "$LIBSL_PATH/${case.sourceLib}")
+    val targetLib = LSLParser.parse(LIBSL_PATH, "$LIBSL_PATH/${case.targetLib}")
     migrate(
-        Path.of(sourceProjectPath),
-        Path.of(outputProjectPath),
+        Path.of("$PROJECTS_PATH/${case.sourceProject}"),
+        Path.of("$OUTPUT_PATH/${case.sourceProject}_migrated"),
         sourceLib, targetLib
     )
 }
