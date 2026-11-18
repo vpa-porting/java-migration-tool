@@ -113,7 +113,7 @@ object CorpusHarness {
     /** True only if both sides returned an equal value, or both threw the same exception class. */
     fun outcomesMatchExactly(a: Outcome, b: Outcome): Boolean = when {
         a is Value && b is Value -> valuesEqual(a.value, b.value)
-        a is Thrown && b is Thrown -> true
+        a is Thrown && b is Thrown -> a.exceptionClass == b.exceptionClass
         else -> false
     }
 
