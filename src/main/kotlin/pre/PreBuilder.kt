@@ -14,18 +14,17 @@ class PreBuilder {
     private var actResCnt = 0
     private fun mkActionResVarName(ctx: PreCtx) = ctx.mkName("ACT_RES#${++actResCnt}")
 
-    fun processFunction(func: Function, automaton: Automaton): PFunc {
+    fun processFunction(func: Function, automaton: Automaton, libraryId: String = ""): PFunc {
         val effectiveReturnType = when (func) {
             is Constructor -> automaton.typeReference.type()
             else -> func.returnType.type()
         }
         val internalVars = mutableSetOf<String>()
         val ctx = PreCtx(internal = internalVars)
-        // All candidate traces share an SMT context. Bare method names alias variables
-        // across classes and overloads (e.g. toJSONString(List) and toJSONString(JSONStyle)).
-        // Scope both arguments and temporaries by the complete specification signature.
-        val signature = func.args.joinToString(",") { it.typeReference.toString() }
-        ctx.procStack.addLast("${automaton.name}.${func.name}($signature)")
+        ctx.procStack.addLast(CallableKey(
+            libraryId, automaton.name, if (func is Constructor) "constructor" else "function",
+            func.name, func.args.map { it.typeReference.toString() }, effectiveReturnType?.name ?: "void",
+        ).smtName())
 
         val internalBlock = mutableListOf<PStat>()
         automaton.internalVariables.forEach { v ->
@@ -71,7 +70,10 @@ class PreBuilder {
         val proc = automaton.procDeclarations.find { it.name == name && match(it.args, args) }
             ?: throw Exception("Can't find procedure call $name(${args.joinToString(", ") { it.type()?.name ?: "?" }})")
 
-        ctx.procStack.addLast(name)
+        ctx.procStack.addLast(CallableKey(
+            "", automaton.name, "procedure", proc.name,
+            proc.args.map { it.typeReference.toString() }, proc.returnType?.toString() ?: "void",
+        ).smtName())
 
         val resultVar = LVar(ctx[RESULT], proc.returnType.type())
         block.add(mkResultDecl(ctx, resultVar))

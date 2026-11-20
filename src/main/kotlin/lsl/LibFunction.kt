@@ -9,6 +9,7 @@ import porting.ssa.*
 data class LibFunction(
     val automata: Automaton,
     val function: Function,
+    val libraryId: String = "",
 ) {
     var funcNumber = -1
 
@@ -23,7 +24,7 @@ data class LibFunction(
         get() = "${automata.name}$${function.name}"
 
     init {
-        val preFunc = PreBuilder().processFunction(function, automata)
+        val preFunc = PreBuilder().processFunction(function, automata, libraryId)
         ssaFunc = SsaBuilder().build(preFunc)
         traces = mutableListOf()
         val traceCtx = TraceCtx(0)
