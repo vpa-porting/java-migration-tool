@@ -1,4 +1,6 @@
 package porting.lsl
+import ru.vpa.porting.lsl.semanticIdentity
+
 import ru.vpa.porting.lsl.LibFunction
 
 
@@ -16,7 +18,7 @@ data class LibModel(
                 lib.fileName,
                 lib.automata.flatMap { auto ->
                     (auto.functions + auto.constructors).mapIndexed { i, func ->
-                        LibFunction(auto, func, lib.fileName,
+                        LibFunction(auto, func, lib.semanticIdentity(),
                             if (auto.annotationUsages.any { it.annotationReference.name in setOf("Terminal", "JavaThrow") })
                                 ru.vpa.porting.expr.ActionEffect.TERMINATE else ru.vpa.porting.expr.ActionEffect.CONTINUE).also { it.funcNumber = i + 1 }
                     }

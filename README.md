@@ -350,3 +350,18 @@ historical aggregate has not been changed. Normal reproduction:
 ./gradlew test --tests porting.corpus.HexutilsCorpusTest --tests porting.corpus.HexHarmlessMigrationTest
 ./gradlew fuzz_HexutilsFuzzTest_decode fuzz_HexutilsStreamingFuzzTest_decodeFile fuzz_HexutilsStreamingFuzzTest_decodeFileRoundTrip -Pfuzz.duration=30s
 ```
+
+
+## Shared semantic porting core
+
+SMT/SSA implementation is supplied by the Maven library
+`ru.vpa.porting:semantic-porting-core:0.1.0`, hosted at
+`https://maven.pkg.github.com/vpa-porting/semantic-porting-core`.
+The repository is private: configure `gpr.user` and a `read:packages` token as `gpr.key`
+in your personal Gradle properties, or use GITHUB_ACTOR/GITHUB_TOKEN environment variables.
+Never commit credentials. CI supports SEMANTIC_CORE_TOKEN when its GITHUB_TOKEN has no
+access to the package. A source checkout of the core is not required for a normal build.
+
+For joint source development only, pass `-PsemanticCoreDir=/path/to/semantic-porting-core`.
+For artifact-only integration checks, pass `-PsemanticCoreRepository=file:///path/to/maven-repository`.
+Java/ArkTS bindings remain in this project; do not restore duplicate solver packages.
