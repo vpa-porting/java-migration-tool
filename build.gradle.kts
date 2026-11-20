@@ -116,6 +116,7 @@ tasks.named("processTestResources") {
 }
 
 tasks.test {
+    testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
     useJUnitPlatform()
     // Specs and demo call sites are read by the tests; `generated/` is their output, not an input.
     inputs.files(fileTree("SpecCorpus") { include("**/specs/**", "**/source-*/**") })
