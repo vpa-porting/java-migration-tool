@@ -13,7 +13,7 @@ data class LibModel(
             return LibModel(
                 lib.fileName,
                 lib.automata.flatMap { auto ->
-                    auto.functions.mapIndexed { i, func ->
+                    (auto.functions + auto.constructors).mapIndexed { i, func ->
                         LibFunction(auto, func).also { it.funcNumber = i + 1 }
                     }
                 }

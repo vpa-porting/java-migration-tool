@@ -15,6 +15,10 @@ class PreBuilder {
     private fun mkActionResVarName(ctx: PreCtx) = ctx.mkName("ACT_RES#${++actResCnt}")
 
     fun processFunction(func: Function, automaton: Automaton): PFunc {
+        val effectiveReturnType = when (func) {
+            is Constructor -> automaton.typeReference.type()
+            else -> func.returnType.type()
+        }
         val internalVars = mutableSetOf<String>()
         val ctx = PreCtx(internal = internalVars)
         // All candidate traces share an SMT context. Bare method names alias variables
@@ -38,7 +42,7 @@ class PreBuilder {
             argsBlock.add(mkArg(ctx, variable))
         }
 
-        val resultVar = LVar(ctx[RESULT], func.returnType.type())
+        val resultVar = LVar(ctx[RESULT], effectiveReturnType)
         val result = mkResultDecl(ctx, resultVar)
 
         val block = mutableListOf<PStat>()
