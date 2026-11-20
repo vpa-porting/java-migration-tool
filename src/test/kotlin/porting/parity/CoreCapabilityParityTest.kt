@@ -4,21 +4,21 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import porting.gen.ConditionNode
-import porting.gen.TraceCallsNode
+import ru.vpa.porting.plan.ConditionNode
+import ru.vpa.porting.plan.TraceCallsNode
 import porting.gen.Generator
 import io.ksmt.solver.KSolverStatus
 import io.ksmt.solver.z3.KZ3Solver
 import org.jetbrains.research.libsl.nodes.Constructor
-import porting.expr.LBinOp
-import porting.expr.LInt
-import porting.expr.LUnOp
+import ru.vpa.porting.expr.LBinOp
+import ru.vpa.porting.expr.LInt
+import ru.vpa.porting.expr.LUnOp
 import porting.lsl.LSLParser
 import porting.lsl.LibModel
-import porting.smt.SMTContext
-import porting.solver.param.ParamCodingCtx
-import porting.solver.trace.TraceSolution
-import porting.solver.trace.TraceSolver
+import ru.vpa.porting.smt.SMTContext
+import ru.vpa.porting.solver.param.ParamCodingCtx
+import ru.vpa.porting.solver.trace.TraceSolution
+import ru.vpa.porting.solver.trace.TraceSolver
 import java.nio.file.Files
 import kotlin.time.Duration.Companion.seconds
 
@@ -154,7 +154,7 @@ class CoreCapabilityParityTest {
             automaton Source: Source { fun value(): int { result = 7; } }
         """).libFunctions.single()
         val root = ConditionNode(
-            porting.expr.LBool(true),
+            ru.vpa.porting.expr.LBool(true),
             TraceCallsNode(emptyList(), emptyMap(), LInt(7), null),
             TraceCallsNode(emptyList(), emptyMap(), LInt(9), null),
         )

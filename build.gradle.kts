@@ -13,6 +13,20 @@ application {
 }
 
 repositories {
+        maven {
+            name = "SemanticPortingCore"
+            url = uri(providers.gradleProperty("semanticCoreRepository").orElse(
+                "https://maven.pkg.github.com/vpa-porting/semantic-porting-core").get())
+            if (!providers.gradleProperty("semanticCoreRepository").isPresent) {
+                credentials {
+                    username = providers.gradleProperty("gpr.user").orElse(providers.environmentVariable("GITHUB_ACTOR")).orNull
+                    password = providers.gradleProperty("gpr.key").orElse(providers.environmentVariable("SEMANTIC_CORE_TOKEN"))
+                        .orElse(providers.environmentVariable("GITHUB_TOKEN")).orNull
+                }
+            }
+            content { includeGroup("ru.vpa.porting") }
+        }
+
     mavenCentral()
     maven("https://jitpack.io")
 }
@@ -26,6 +40,7 @@ val jazzerAgent: Configuration by configurations.creating {
 }
 
 dependencies {
+    implementation("ru.vpa.porting:semantic-porting-core:0.1.0")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.1")
     // Coverage-guided differential fuzzing (src/test/kotlin/porting/fuzz). Plain `test` runs the
@@ -33,7 +48,7 @@ dependencies {
     testImplementation("com.code-intelligence:jazzer-junit:0.30.0")
     jazzerAgent("com.code-intelligence:jazzer:0.30.0")
 
-    implementation("com.github.vpa-research:libsl-parser:c2db6b6")
+
 
     // https://mvnrepository.com/artifact/com.github.javaparser/javaparser-core
     implementation("com.github.javaparser:javaparser-core:3.26.3")
@@ -42,9 +57,9 @@ dependencies {
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.26.3")
 
     // core
-    implementation("io.ksmt:ksmt-core:0.5.23")
+
     // z3 solver
-    implementation("io.ksmt:ksmt-z3:0.5.23")
+    testImplementation("io.ksmt:ksmt-z3:0.5.23")
 
     corpusJars("com.brsanthu:migbase64:2.2")
     corpusJars("net.lbruun:hexutils:1.0.0")

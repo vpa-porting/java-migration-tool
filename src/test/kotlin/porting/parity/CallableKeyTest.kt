@@ -1,7 +1,7 @@
 package porting.parity
 
 import kotlin.test.*
-import porting.pre.CallableKey
+import ru.vpa.porting.pre.CallableKey
 
 class CallableKeyTest {
     @Test fun `owners signatures kinds and delimiter-containing names do not alias`() {

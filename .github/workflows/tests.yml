@@ -7,10 +7,14 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: tests-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.SEMANTIC_CORE_TOKEN || secrets.GITHUB_TOKEN }}
 
 jobs:
   test:

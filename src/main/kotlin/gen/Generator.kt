@@ -1,13 +1,17 @@
 package porting.gen
+import ru.vpa.porting.plan.*
+
+import porting.gen.toJavaStr
+
 
 import org.jetbrains.research.libsl.nodes.Automaton
 import org.jetbrains.research.libsl.nodes.StringLiteral
 import com.github.javaparser.ast.expr.StringLiteralExpr
-import porting.expr.LExpr
-import porting.expr.LVar
-import porting.expr.not
-import porting.lsl.LibFunction
-import porting.ssa.Trace
+import ru.vpa.porting.expr.LExpr
+import ru.vpa.porting.expr.LVar
+import ru.vpa.porting.expr.not
+import ru.vpa.porting.lsl.LibFunction
+import ru.vpa.porting.ssa.Trace
 
 /** Name of the LSL `annotation JavaAccessor(expr: string);` used to mark an automaton whose
  * instances are obtained through a real Java static accessor expression (e.g. a stateless
@@ -131,6 +135,10 @@ class Generator {
         when (node) {
             is TraceCallsNode -> generateTraceCalls(node)
             is ConditionNode -> generateCondition(node)
+            is ReturnNode -> writeln("return ${narrowed(node.value.toJavaStr(resultMap))};")
+            is TerminateNode -> check(generateTraceCall(node.call, node.args)) {
+                "Terminal action has no Java throw binding"
+            }
             null -> {}
         }
     }
@@ -145,8 +153,9 @@ class Generator {
             }
         }
         if (!terminated) {
-            if (node.result != null) {
-                writeln("return ${narrowed(node.result.toJavaStr(resultMap))};")
+            val nodeResult = node.result
+        if (nodeResult != null) {
+                writeln("return ${narrowed(nodeResult.toJavaStr(resultMap))};")
             } else generateGenNode(node.next)
         }
         depth--
@@ -156,7 +165,10 @@ class Generator {
     private fun generateTraceCall(trace: Trace, argsMap: Map<LVar, LExpr>): Boolean {
         val exceptionType = javaThrowTypeOf(trace.function.automata)
         if (exceptionType != null) {
-            writeln("throw new $exceptionType();")
+            val arguments = trace.args.joinToString(", ") { arg ->
+                (argsMap[arg.name] ?: error("Unmapped exception argument ${arg.name}")).toJavaStr(resultMap)
+            }
+            writeln("throw new $exceptionType($arguments);")
             return true
         }
         val result = if (trace.result != null) {
@@ -234,7 +246,7 @@ class Generator {
     private fun isTrivial(node: GenNode?): Boolean = when (node) {
         null -> true
         is TraceCallsNode -> node.traceCalls.isEmpty() && node.result == null && node.next == null
-        is ConditionNode -> false
+        is ConditionNode, is ReturnNode, is TerminateNode -> false
     }
 
     private fun writeln(text: String) {

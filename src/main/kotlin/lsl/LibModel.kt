@@ -1,4 +1,6 @@
 package porting.lsl
+import ru.vpa.porting.lsl.LibFunction
+
 
 import org.jetbrains.research.libsl.nodes.Library
 import java.util.*
@@ -14,7 +16,9 @@ data class LibModel(
                 lib.fileName,
                 lib.automata.flatMap { auto ->
                     (auto.functions + auto.constructors).mapIndexed { i, func ->
-                        LibFunction(auto, func, lib.fileName).also { it.funcNumber = i + 1 }
+                        LibFunction(auto, func, lib.fileName,
+                            if (auto.annotationUsages.any { it.annotationReference.name in setOf("Terminal", "JavaThrow") })
+                                ru.vpa.porting.expr.ActionEffect.TERMINATE else ru.vpa.porting.expr.ActionEffect.CONTINUE).also { it.funcNumber = i + 1 }
                     }
                 }
             )

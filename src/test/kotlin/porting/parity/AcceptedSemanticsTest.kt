@@ -1,8 +1,8 @@
 package porting.parity
 
 import kotlin.test.*
-import porting.expr.*
-import porting.smt.SMTContext
+import ru.vpa.porting.expr.*
+import ru.vpa.porting.smt.SMTContext
 
 class AcceptedSemanticsTest {
     @Test fun `UTF16 characters have consistent sorts and unsigned promotion`() {
