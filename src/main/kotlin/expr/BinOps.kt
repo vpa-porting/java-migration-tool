@@ -87,6 +87,12 @@ object BinOps {
         if (left == null || right == null) throw IllegalArgumentException("Binary operation with void")
         val leftCl = left::class.java
         val rightCl = right::class.java
+        if (left is BoolType || right is BoolType) {
+            require(left is BoolType && right is BoolType && op in boolOps) {
+                "Unsupported boolean operation: $left $op $right"
+            }
+            return BoolType(LSL_CTX)
+        }
         if ((left is CharType || right is CharType) &&
             (left is CharType || intTypes.contains(leftCl)) && (right is CharType || intTypes.contains(rightCl))) {
             if (cmpOps.contains(op)) return BoolType(LSL_CTX)
