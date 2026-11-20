@@ -1,4 +1,5 @@
 package porting.gen
+import porting.lsl.AutomatonBinding
 import ru.vpa.porting.plan.*
 
 import porting.gen.toJavaStr
@@ -42,8 +43,6 @@ private const val JAVA_CONSTRUCTOR_ARG = "javaType"
  * source specification state exactly when the original raises which JDK exception - e.g. an
  * out-of-range slice - and have the migrated code raise the same class, without a facade class.
  */
-private const val JAVA_THROW_ANNOTATION = "JavaThrow"
-private const val JAVA_THROW_ARG = "exception"
 
 /** Reused by convention (see `tool/Migrator.kt`'s source-side receiver check) to mark a target
  * function's first declared parameter as the real instance the call is made on, e.g. a fun
@@ -90,7 +89,8 @@ fun hasSyntheticJavaBinding(automaton: Automaton): Boolean =
 
 /** The exception class to throw for [automaton], if it was declared with `@JavaThrow(exception = "...")`. */
 private fun javaThrowTypeOf(automaton: Automaton): String? =
-    stringAnnotationArg(automaton, JAVA_THROW_ANNOTATION, JAVA_THROW_ARG)
+    (AutomatonBinding.decode(automaton) as? AutomatonBinding.Throw)
+        ?.exceptionType?.let { StringLiteralExpr(it).asString() }
 
 private val NARROW_TYPES = setOf("byte", "short", "char")
 

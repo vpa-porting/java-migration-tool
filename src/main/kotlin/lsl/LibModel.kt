@@ -16,14 +16,25 @@ data class LibModel(
         fun mkModel(lib: Library): LibModel {
             return LibModel(
                 lib.fileName,
-                lib.automata.flatMap { auto ->
-                    (auto.functions + auto.constructors).mapIndexed { i, func ->
-                        LibFunction(auto, func, lib.semanticIdentity(),
-                            if (auto.annotationUsages.any { it.annotationReference.name in setOf("Terminal", "JavaThrow") })
-                                ru.vpa.porting.expr.ActionEffect.TERMINATE else ru.vpa.porting.expr.ActionEffect.CONTINUE).also { it.funcNumber = i + 1 }
-                    }
-                }
+                collectFunctions(lib)
             )
+        }
+
+        private fun collectFunctions(lib: Library): List<LibFunction> {
+            val libraryId = lib.semanticIdentity()
+            return lib.automata.flatMap { automaton ->
+                val binding = AutomatonBinding.decode(automaton)
+                (automaton.functions + automaton.constructors).mapIndexed { index, function ->
+                    val prepared = LibFunction(
+                        automata = automaton,
+                        function = function,
+                        libraryId = libraryId,
+                        effect = binding.effect,
+                    )
+                    prepared.funcNumber = index + 1
+                    prepared
+                }
+            }
         }
 
         fun funcToDot(func: LibFunction): String {
