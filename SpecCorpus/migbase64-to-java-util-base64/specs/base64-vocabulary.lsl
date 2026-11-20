@@ -36,12 +36,17 @@ define action SUBSTRING_FROM(s: string, from: int32): string;
 
 // Exceptional outcomes. Each stands for "the call ends by throwing exactly this JDK exception":
 // the target specification realizes them with @JavaThrow, so the migrated code throws it too.
+annotation Terminal();
+@Terminal
 define action THROW_ARRAY_INDEX_OUT_OF_BOUNDS();
+@Terminal
 define action THROW_NEGATIVE_ARRAY_SIZE();
+@Terminal
 define action THROW_NULL_POINTER();
 
 // UTF-16 substring with the same bounds and exceptional behavior as String.substring.
 define action SUBSTRING_RANGE(s: string, from: int32, to: int32): string;
+@Terminal
 define action THROW_STRING_INDEX_OUT_OF_BOUNDS();
 
 // Standard String/Integer operations used to state the fast decoder's input normalization.

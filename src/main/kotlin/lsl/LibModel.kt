@@ -1,4 +1,8 @@
 package porting.lsl
+import ru.vpa.porting.lsl.SpecificationParser
+
+import ru.vpa.porting.lsl.LibFunction
+
 
 import org.jetbrains.research.libsl.nodes.Library
 import java.util.*
@@ -12,11 +16,7 @@ data class LibModel(
         fun mkModel(lib: Library): LibModel {
             return LibModel(
                 lib.fileName,
-                lib.automata.flatMap { auto ->
-                    auto.functions.mapIndexed { i, func ->
-                        LibFunction(auto, func).also { it.funcNumber = i + 1 }
-                    }
-                }
+                SpecificationParser.prepare(lib).functions
             )
         }
 

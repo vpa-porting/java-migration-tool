@@ -11,20 +11,20 @@ import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import com.github.javaparser.utils.ProjectRoot
 import com.github.javaparser.utils.SourceRoot
-import porting.PRINT_DEBUG
+import ru.vpa.porting.PRINT_DEBUG
 import com.github.javaparser.symbolsolver.JavaSymbolSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver
-import porting.lsl.LibFunction
+import ru.vpa.porting.lsl.LibFunction
 import porting.gen.toJavaType
 import porting.gen.Generator
-import porting.gen.mkGenNode
+import ru.vpa.porting.solver.buildMigrationPlan as mkGenNode
 import porting.getOrPrintError
 import porting.lsl.LibModel
 import porting.path
-import porting.solver.Solver
+import ru.vpa.porting.solver.Solver
 import java.io.IOException
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
