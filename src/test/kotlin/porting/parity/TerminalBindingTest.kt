@@ -8,7 +8,7 @@ import ru.vpa.porting.plan.TerminateNode
 import ru.vpa.porting.expr.LString
 
 class TerminalBindingTest {
-    @Test fun `binding validation rejects empty exception type before solving`() {
+    @Test fun `generator rejects empty exception type`() {
         val root = Files.createTempDirectory("invalid-binding-")
         val file = root.resolve("invalid.lsl")
         try {
@@ -16,12 +16,17 @@ class TerminalBindingTest {
                 libsl "1.0.0";
                 library `InvalidBinding` version "1";
                 annotation JavaThrow(exception: string);
+                annotation Terminal();
+                @Terminal
+                define action FAIL(): void;
                 type Target { }
                 @JavaThrow(exception = "")
-                automaton Target: Target { fun fail(): void { } }
+                automaton Target: Target { fun fail(): void { action FAIL(); } }
             """.trimIndent())
             assertFailsWith<IllegalArgumentException> {
-                LSLParser.parse(root.toString(), file.toString())
+                val function = LSLParser.parse(root.toString(), file.toString()).libFunctions.single()
+                val node = TerminateNode(function.traces.single(), emptyMap())
+                Generator().generate(function, node)
             }
         } finally { Files.deleteIfExists(file); Files.deleteIfExists(root) }
     }
@@ -36,6 +41,8 @@ class TerminalBindingTest {
                 typealias string = string;
                 annotation JavaThrow(exception: string);
                 type Target { }
+                annotation Terminal();
+                @Terminal
                 define action FAILURE(message: string): void;
                 @JavaThrow(exception = "java.lang.IllegalArgumentException")
                 automaton Target: Target {
@@ -43,7 +50,7 @@ class TerminalBindingTest {
                 }
             """.trimIndent())
             val function = LSLParser.parse(root.toString(), file.toString()).libFunctions.single()
-            assertEquals(ru.vpa.porting.expr.ActionEffect.TERMINATE, function.effect)
+            assertTrue(function.traces.single().actions.any { it.value.effect == ru.vpa.porting.expr.ActionEffect.TERMINATE })
             val trace = function.traces.single()
             val node = TerminateNode(trace, mapOf(trace.args.single().name to LString("failure")))
             val generated = Generator().generate(function, node)

@@ -73,8 +73,7 @@ fetch script.
 
 ## Exceptional outcomes in specifications
 
-A source specification can say that a call *ends by throwing* a JDK exception: an action named
-`THROW_<something>` (e.g. `action THROW_ARRAY_INDEX_OUT_OF_BOUNDS();`) terminates its path, and
+A source specification can say that a call *ends by throwing* a JDK exception: an action declared with `@Terminal` terminates its path, and
 nothing after it is part of the trace. The target specification realizes such an action with an
 automaton annotated `@JavaThrow(exception = "java.lang.ArrayIndexOutOfBoundsException")`, which the
 generator turns into `throw new java.lang.ArrayIndexOutOfBoundsException();` (no call, no import).
@@ -355,7 +354,7 @@ historical aggregate has not been changed. Normal reproduction:
 ## Shared semantic porting core
 
 SMT/SSA implementation is supplied by the Maven library
-`ru.vpa.porting:semantic-porting-core:0.1.0`, hosted at
+`ru.vpa.porting:semantic-porting-core:0.2.0`, hosted at
 `https://maven.pkg.github.com/vpa-porting/semantic-porting-core`.
 The repository is private: configure `gpr.user` and a `read:packages` token as `gpr.key`
 in your personal Gradle properties, or use GITHUB_ACTOR/GITHUB_TOKEN environment variables.
@@ -396,3 +395,8 @@ This explicitly substitutes the Maven dependency with the local core source buil
 Public dependencies still need network access on first resolution. To test offline later,
 first resolve all dependencies and JDKs online, then add `--offline`.
 An HTTP 401/404 for the core POM indicates missing credentials or package access.
+
+The shared terminal-action contract is defined in core 0.2.0:
+`@Terminal` belongs on action declarations. Names such as `THROW_*` and backend
+exception bindings do not imply termination. See
+[the standard and migration guide](https://github.com/vpa-porting/semantic-porting-core/blob/v0.2.0/docs/smt/TERMINAL-STANDARD.md).

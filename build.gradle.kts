@@ -40,7 +40,7 @@ val jazzerAgent: Configuration by configurations.creating {
 }
 
 dependencies {
-    implementation("ru.vpa.porting:semantic-porting-core:0.1.0")
+    implementation("ru.vpa.porting:semantic-porting-core:0.2.0")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.1")
     // Coverage-guided differential fuzzing (src/test/kotlin/porting/fuzz). Plain `test` runs the

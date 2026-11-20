@@ -134,6 +134,8 @@ class CoreCapabilityParityTest {
     fun `terminal actions drop dead code in SSA`() {
         val function = library("""
             type Source { }
+            annotation Terminal();
+            @Terminal
             define action THROW_FAILURE(): void;
             define action AFTER_THROW(): int;
             automaton Source: Source {

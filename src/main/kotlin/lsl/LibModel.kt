@@ -1,5 +1,5 @@
 package porting.lsl
-import ru.vpa.porting.lsl.semanticIdentity
+import ru.vpa.porting.lsl.SpecificationParser
 
 import ru.vpa.porting.lsl.LibFunction
 
@@ -16,25 +16,8 @@ data class LibModel(
         fun mkModel(lib: Library): LibModel {
             return LibModel(
                 lib.fileName,
-                collectFunctions(lib)
+                SpecificationParser.prepare(lib).functions
             )
-        }
-
-        private fun collectFunctions(lib: Library): List<LibFunction> {
-            val libraryId = lib.semanticIdentity()
-            return lib.automata.flatMap { automaton ->
-                val binding = AutomatonBinding.decode(automaton)
-                (automaton.functions + automaton.constructors).mapIndexed { index, function ->
-                    val prepared = LibFunction(
-                        automata = automaton,
-                        function = function,
-                        libraryId = libraryId,
-                        effect = binding.effect,
-                    )
-                    prepared.funcNumber = index + 1
-                    prepared
-                }
-            }
         }
 
         fun funcToDot(func: LibFunction): String {

@@ -1,5 +1,4 @@
 package porting.gen
-import porting.lsl.AutomatonBinding
 import ru.vpa.porting.plan.*
 
 import porting.gen.toJavaStr
@@ -89,8 +88,9 @@ fun hasSyntheticJavaBinding(automaton: Automaton): Boolean =
 
 /** The exception class to throw for [automaton], if it was declared with `@JavaThrow(exception = "...")`. */
 private fun javaThrowTypeOf(automaton: Automaton): String? =
-    (AutomatonBinding.decode(automaton) as? AutomatonBinding.Throw)
-        ?.exceptionType?.let { StringLiteralExpr(it).asString() }
+    stringAnnotationArg(automaton, "JavaThrow", "exception")?.also {
+        require(it.isNotBlank()) { "JavaThrow exception type must not be blank" }
+    }
 
 private val NARROW_TYPES = setOf("byte", "short", "char")
 
