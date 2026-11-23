@@ -354,7 +354,7 @@ historical aggregate has not been changed. Normal reproduction:
 ## Shared semantic porting core
 
 SMT/SSA implementation is supplied by the Maven library
-`ru.vpa.porting:semantic-porting-core:0.2.1`, hosted at
+`ru.vpa.porting:semantic-porting-core:0.2.2`, hosted at
 `https://maven.pkg.github.com/vpa-porting/semantic-porting-core`.
 The repository is private: configure `gpr.user` and a `read:packages` token as `gpr.key`
 in your personal Gradle properties, or use GITHUB_ACTOR/GITHUB_TOKEN environment variables.
