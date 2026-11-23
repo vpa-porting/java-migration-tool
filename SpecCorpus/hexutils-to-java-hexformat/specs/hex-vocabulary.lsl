@@ -33,8 +33,11 @@ define action REPLACE_CHAR(s: string, oldChar: char, newChar: char): string;
 define action LENGTH(s: string): int32;
 
 // Exceptional outcome: "the call ends by throwing exactly this JDK exception". The target
-// specification realizes it with @JavaThrow, so the migrated code throws it too.
+// specification realizes it with @Throws, so the migrated code throws it too.
+annotation Terminal();
+@Terminal
 define action THROW_ILLEGAL_ARGUMENT();
+@Terminal
 define action THROW_NULL_POINTER();
 // Appends the characters to the builder (which is modified) and answers the same builder.
 define action SB_APPEND_CHARS(sb: java.lang.StringBuilder, chars: array<char>): java.lang.StringBuilder;
@@ -56,7 +59,9 @@ define action SEQUENCE_TEXT(s: java.lang.CharSequence): string;
 define action REGEX_QUOTE(s: string): string;
 define action BYTE_ARRAY_LENGTH(data: array<int8>): int32;
 define action COPY_BYTES_RANGE(data: array<int8>, from: int32, to: int32): array<int8>;
+@Terminal
 define action THROW_STRING_INDEX_OUT_OF_BOUNDS();
+@Terminal
 define action THROW_ARRAY_INDEX_OUT_OF_BOUNDS();
 
 // Standard JDK operations for delimiter grammars and ordered file effects.
@@ -73,4 +78,5 @@ define action APPEND_OPTIONS(): array<java.nio.file.OpenOption>;
 // Abstract terminal rejection of invalid hex. The concrete exception class is
 // deliberately outside this common action: source HexConversionException versus
 // target NumberFormatException. Differential tests still compare the classes exactly.
+@Terminal
 define action THROW_INVALID_HEX();

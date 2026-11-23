@@ -2,8 +2,8 @@ package porting.gen
 
 import org.jetbrains.research.libsl.nodes.references.TypeReference
 import org.jetbrains.research.libsl.type.*
-import porting.expr.*
-import porting.typeResolveError
+import ru.vpa.porting.expr.*
+import ru.vpa.porting.typeResolveError
 
 fun TypeReference?.toJavaType(): String {
     if (this == null) return "void"
@@ -79,13 +79,4 @@ fun RealType.toJavaType(): String {
         "float", "double", "int" -> this.name
         else -> throw IllegalArgumentException("Can't get java type for $this")
     }
-}
-
-fun Type?.defaultValue() = this.toJavaType().javaTypeDefaultValue()
-
-fun String.javaTypeDefaultValue() = when (this) {
-    "byte", "short", "int", "long" -> LInt(0)
-    "float", "double" -> LFloat(0.0)
-    "boolean" -> LBool(false)
-    else -> LNull
 }

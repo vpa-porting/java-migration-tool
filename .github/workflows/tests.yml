@@ -2,15 +2,25 @@ name: Tests
 
 on:
   push:
+    branches: [master]
   pull_request:
   workflow_dispatch:
+    inputs:
+      base64_only:
+        description: Run only the Base64 corpus diagnostic
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: tests-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.SEMANTIC_CORE_TOKEN || secrets.GITHUB_TOKEN }}
 
 jobs:
   test:
@@ -31,7 +41,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Diagnose Base64 corpus
+        if: ${{ inputs.base64_only }}
+        run: ./gradlew --no-daemon --info --stacktrace -Dorg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_21_X64 test --tests '*MigBase64CorpusTest'
       - name: Run tests
+        if: ${{ !inputs.base64_only }}
         run: ./gradlew --no-daemon --stacktrace -Dorg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_21_X64 test
 
       - name: Upload test results

@@ -53,6 +53,8 @@ automaton net.lbruun.hexutils.Hex: net.lbruun.hexutils.Hex {
     // String decoding skips individual delimiter characters only at byte boundaries.
     // Read the maximal valid prefix so allocation overflow takes priority over a
     // later invalid pair. A one-character remainder fails reading its second nibble.
+    // The outer byte repetition is possessive: the trailing DOTALL suffix accepts
+    // every remainder, so backtracking cannot improve the match and only grows the Java regex stack.
     // The source's HexConversionException remains approximated by a JDK exception.
     proc parseOrDelimited(s: java.lang.CharSequence, delim: string): array<int8> {
         if (delim == null) {
@@ -68,14 +70,14 @@ automaton net.lbruun.hexutils.Hex: net.lbruun.hexutils.Hex {
                     action THROW_ILLEGAL_ARGUMENT();
                 } else {
                     var expected: int32 = (n + delimiterLength) / (2 + delimiterLength);
-                    var pattern: string = "(?s)^((?:[0-9A-Fa-f]{2})*).*\\z";
+                    var pattern: string = "(?s)^((?:[0-9A-Fa-f]{2})*+).*\\z";
                     var delimiters: string = "";
                     if (delimiterLength > 0) {
                         var quoted: string = action REGEX_QUOTE(delim);
                         var head: string = action STRING_CONCAT("[", quoted);
                         delimiters = action STRING_CONCAT(head, "]");
                         var p1: string = action STRING_CONCAT("(?s)^((?:", delimiters);
-                        var p2: string = action STRING_CONCAT(p1, "*[0-9A-Fa-f]{2})*");
+                        var p2: string = action STRING_CONCAT(p1, "*[0-9A-Fa-f]{2})*+");
                         var p3: string = action STRING_CONCAT(p2, delimiters);
                         pattern = action STRING_CONCAT(p3, "*).*\\z");
                     }

@@ -5,7 +5,7 @@ import hex-vocabulary;
 
 annotation JavaAccessor(expr: string);
 annotation JavaConstructor(javaType: string);
-annotation JavaThrow(exception: string);
+annotation Throws(exception: string);
 
 type java.util.HexFormat.PlainLower {}
 @JavaAccessor(expr = "java.util.HexFormat.of()")
@@ -111,7 +111,7 @@ automaton java.lang.String.Ctor: java.lang.String {
 }
 
 type java.lang.IllegalArgumentException {}
-@JavaThrow(exception = "java.lang.IllegalArgumentException")
+@Throws(exception = "java.lang.IllegalArgumentException")
 automaton java.lang.IllegalArgumentException: java.lang.IllegalArgumentException {
     fun raise() {
         action THROW_ILLEGAL_ARGUMENT();
@@ -139,7 +139,7 @@ automaton java.lang.StringBuilder: java.lang.StringBuilder {
 }
 
 type java.lang.NullPointerException {}
-@JavaThrow(exception = "java.lang.NullPointerException")
+@Throws(exception = "java.lang.NullPointerException")
 automaton java.lang.NullPointerException: java.lang.NullPointerException {
     fun raise() {
         action THROW_NULL_POINTER();
@@ -189,13 +189,13 @@ automaton java.util.Arrays: java.util.Arrays {
 }
 
 type java.lang.StringIndexOutOfBoundsException {}
-@JavaThrow(exception = "java.lang.StringIndexOutOfBoundsException")
+@Throws(exception = "java.lang.StringIndexOutOfBoundsException")
 automaton java.lang.StringIndexOutOfBoundsException: java.lang.StringIndexOutOfBoundsException {
     fun raise() { action THROW_STRING_INDEX_OUT_OF_BOUNDS(); }
 }
 
 type java.lang.ArrayIndexOutOfBoundsException {}
-@JavaThrow(exception = "java.lang.ArrayIndexOutOfBoundsException")
+@Throws(exception = "java.lang.ArrayIndexOutOfBoundsException")
 automaton java.lang.ArrayIndexOutOfBoundsException: java.lang.ArrayIndexOutOfBoundsException {
     fun raise() { action THROW_ARRAY_INDEX_OUT_OF_BOUNDS(); }
 }
@@ -226,7 +226,7 @@ automaton JdkAppendOptions: JdkAppendOptions {
 }
 
 type java.lang.NumberFormatException {}
-@JavaThrow(exception = "java.lang.NumberFormatException")
+@Throws(exception = "java.lang.NumberFormatException")
 automaton java.lang.NumberFormatException: java.lang.NumberFormatException {
     fun raise() { action THROW_INVALID_HEX(); }
 }

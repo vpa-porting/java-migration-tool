@@ -118,6 +118,20 @@ class HexutilsCorpusTest {
         return c.dynamicTests(EXPECTED_MATCHES)
     }
 
+    @Test
+    fun `long delimited hex inputs decode without regex stack growth`() {
+        val payload = ByteArray(12000) { (it * 37).toByte() }
+        val parameters = arrayOf<Class<*>>(charSequence, string)
+        for (delimiter in listOf("", ":", "-")) {
+            val input = java.util.HexFormat.ofDelimiter(delimiter).formatHex(payload)
+            for (clazz in listOf(migrated.source, migrated.target)) {
+                val decoded = clazz.getMethod("hexStrToBytes", *parameters)
+                    .invoke(null, input, delimiter) as ByteArray
+                assertContentEquals(payload, decoded)
+            }
+        }
+    }
+
     @ParameterizedTest(name = "hexStrToBytes(\"{0}\")")
     @CsvSource(
         "a, throws IllegalArgumentException, throws IllegalArgumentException",

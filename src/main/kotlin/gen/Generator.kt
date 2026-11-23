@@ -1,13 +1,17 @@
 package porting.gen
+import ru.vpa.porting.plan.*
+
+import porting.gen.toJavaStr
+
 
 import org.jetbrains.research.libsl.nodes.Automaton
 import org.jetbrains.research.libsl.nodes.StringLiteral
 import com.github.javaparser.ast.expr.StringLiteralExpr
-import porting.expr.LExpr
-import porting.expr.LVar
-import porting.expr.not
-import porting.lsl.LibFunction
-import porting.ssa.Trace
+import ru.vpa.porting.expr.LExpr
+import ru.vpa.porting.expr.LVar
+import ru.vpa.porting.expr.not
+import ru.vpa.porting.lsl.LibFunction
+import ru.vpa.porting.ssa.Trace
 
 /** Name of the LSL `annotation JavaAccessor(expr: string);` used to mark an automaton whose
  * instances are obtained through a real Java static accessor expression (e.g. a stateless
@@ -32,14 +36,12 @@ private val ACCESSOR_PARAM_REF = Regex("\\$([A-Za-z_][A-Za-z0-9_]*)")
 private const val JAVA_CONSTRUCTOR_ANNOTATION = "JavaConstructor"
 private const val JAVA_CONSTRUCTOR_ARG = "javaType"
 
-/** Name of the LSL `annotation JavaThrow(exception: string);` used to mark an automaton whose
+/** Name of the LSL `annotation Throws(exception: string);` used to mark an automaton whose
  * functions stand for an exceptional outcome rather than a call: realizing one emits
  * `throw new <exception>();` and ends the path (nothing after it is generated). This lets a
  * source specification state exactly when the original raises which JDK exception - e.g. an
  * out-of-range slice - and have the migrated code raise the same class, without a facade class.
  */
-private const val JAVA_THROW_ANNOTATION = "JavaThrow"
-private const val JAVA_THROW_ARG = "exception"
 
 /** Reused by convention (see `tool/Migrator.kt`'s source-side receiver check) to mark a target
  * function's first declared parameter as the real instance the call is made on, e.g. a fun
@@ -82,11 +84,11 @@ private fun javaConstructorTypeOf(automaton: Automaton): String? =
  * [Generator], and the synthetic name may not even resolve to a real Java symbol.
  */
 fun hasSyntheticJavaBinding(automaton: Automaton): Boolean =
-    javaAccessorOf(automaton) != null || javaConstructorTypeOf(automaton) != null || javaThrowTypeOf(automaton) != null
+    javaAccessorOf(automaton) != null || javaConstructorTypeOf(automaton) != null || exceptionTypeOf(automaton) != null
 
-/** The exception class to throw for [automaton], if it was declared with `@JavaThrow(exception = "...")`. */
-private fun javaThrowTypeOf(automaton: Automaton): String? =
-    stringAnnotationArg(automaton, JAVA_THROW_ANNOTATION, JAVA_THROW_ARG)
+/** The exception class to throw for [automaton], if it was declared with `@Throws(exception = "...")`. */
+private fun exceptionTypeOf(automaton: Automaton): String? =
+    ru.vpa.porting.lsl.ExceptionBinding.from(automaton)?.exceptionType
 
 private val NARROW_TYPES = setOf("byte", "short", "char")
 
@@ -131,6 +133,10 @@ class Generator {
         when (node) {
             is TraceCallsNode -> generateTraceCalls(node)
             is ConditionNode -> generateCondition(node)
+            is ReturnNode -> writeln("return ${narrowed(node.value.toJavaStr(resultMap))};")
+            is TerminateNode -> check(generateTraceCall(node.call, node.args)) {
+                "Terminal action has no Java throw binding"
+            }
             null -> {}
         }
     }
@@ -145,8 +151,9 @@ class Generator {
             }
         }
         if (!terminated) {
-            if (node.result != null) {
-                writeln("return ${narrowed(node.result.toJavaStr(resultMap))};")
+            val nodeResult = node.result
+        if (nodeResult != null) {
+                writeln("return ${narrowed(nodeResult.toJavaStr(resultMap))};")
             } else generateGenNode(node.next)
         }
         depth--
@@ -154,9 +161,12 @@ class Generator {
 
     /** Emits one target call; returns true if it was a `throw`, which ends the path. */
     private fun generateTraceCall(trace: Trace, argsMap: Map<LVar, LExpr>): Boolean {
-        val exceptionType = javaThrowTypeOf(trace.function.automata)
+        val exceptionType = trace.function.exceptionBinding?.exceptionType
         if (exceptionType != null) {
-            writeln("throw new $exceptionType();")
+            val arguments = trace.args.joinToString(", ") { arg ->
+                (argsMap[arg.name] ?: error("Unmapped exception argument ${arg.name}")).toJavaStr(resultMap)
+            }
+            writeln("throw new $exceptionType($arguments);")
             return true
         }
         val result = if (trace.result != null) {
@@ -234,7 +244,7 @@ class Generator {
     private fun isTrivial(node: GenNode?): Boolean = when (node) {
         null -> true
         is TraceCallsNode -> node.traceCalls.isEmpty() && node.result == null && node.next == null
-        is ConditionNode -> false
+        is ConditionNode, is ReturnNode, is TerminateNode -> false
     }
 
     private fun writeln(text: String) {

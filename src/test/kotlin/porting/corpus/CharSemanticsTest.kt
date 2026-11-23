@@ -1,8 +1,8 @@
 package porting.corpus
 
 import org.junit.jupiter.api.Test
-import porting.expr.*
-import porting.smt.SMTContext
+import ru.vpa.porting.expr.*
+import ru.vpa.porting.smt.SMTContext
 import kotlin.test.assertEquals
 
 class CharSemanticsTest {

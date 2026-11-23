@@ -73,10 +73,9 @@ fetch script.
 
 ## Exceptional outcomes in specifications
 
-A source specification can say that a call *ends by throwing* a JDK exception: an action named
-`THROW_<something>` (e.g. `action THROW_ARRAY_INDEX_OUT_OF_BOUNDS();`) terminates its path, and
+A source specification can say that a call *ends by throwing* a JDK exception: an action declared with `@Terminal` terminates its path, and
 nothing after it is part of the trace. The target specification realizes such an action with an
-automaton annotated `@JavaThrow(exception = "java.lang.ArrayIndexOutOfBoundsException")`, which the
+automaton annotated `@Throws(exception = "java.lang.ArrayIndexOutOfBoundsException")`, which the
 generator turns into `throw new java.lang.ArrayIndexOutOfBoundsException();` (no call, no import).
 This is how a migrated method reproduces *when* the original fails and with *which* exception class,
 e.g. a slice that leaves the array, a char above U+00FF, a delimiter that is a hex digit. Only
@@ -350,3 +349,58 @@ historical aggregate has not been changed. Normal reproduction:
 ./gradlew test --tests porting.corpus.HexutilsCorpusTest --tests porting.corpus.HexHarmlessMigrationTest
 ./gradlew fuzz_HexutilsFuzzTest_decode fuzz_HexutilsStreamingFuzzTest_decodeFile fuzz_HexutilsStreamingFuzzTest_decodeFileRoundTrip -Pfuzz.duration=30s
 ```
+
+
+## Shared semantic porting core
+
+SMT/SSA implementation is supplied by the Maven library
+`ru.vpa.porting:semantic-porting-core:0.3.0`, hosted at
+`https://maven.pkg.github.com/vpa-porting/semantic-porting-core`.
+The repository is private: configure `gpr.user` and a `read:packages` token as `gpr.key`
+in your personal Gradle properties, or use GITHUB_ACTOR/GITHUB_TOKEN environment variables.
+Never commit credentials. CI supports SEMANTIC_CORE_TOKEN when its GITHUB_TOKEN has no
+access to the package. A source checkout of the core is not required for a normal build.
+
+For joint source development only, pass `-PsemanticCoreDir=/path/to/semantic-porting-core`.
+For artifact-only integration checks, pass `-PsemanticCoreRepository=file:///path/to/maven-repository`.
+Java/ArkTS bindings remain in this project; do not restore duplicate solver packages.
+
+## Local build with the shared core
+
+Install JDK 17 and 21; use JDK 21 for Gradle (`JAVA_HOME`). Java tests require JDK 21.
+Use the checked-in Gradle wrapper; a system Gradle installation is unnecessary.
+
+For the published package, add these keys to **your own** `~/.gradle/gradle.properties`:
+
+```properties
+gpr.user=YOUR_GITHUB_LOGIN
+gpr.key=YOUR_ACTUAL_CLASSIC_PAT
+```
+
+The value must be a real GitHub PAT classic with `read:packages`, owned by an account
+with access to the private core. GitHub Actions secrets are not available on your laptop.
+Do not put the token in project files or command arguments. Authorize organization SSO if required.
+
+```sh
+./gradlew build
+```
+
+To work on both repositories without downloading the private core artifact:
+
+```sh
+./gradlew -PsemanticCoreDir=../semantic-porting-core build
+```
+
+This explicitly substitutes the Maven dependency with the local core source build.
+Public dependencies still need network access on first resolution. To test offline later,
+first resolve all dependencies and JDKs online, then add `--offline`.
+An HTTP 401/404 for the core POM indicates missing credentials or package access.
+
+The shared terminal-action contract is defined in core 0.2.0:
+`@Terminal` belongs on action declarations. Names such as `THROW_*` and backend
+exception bindings do not imply termination. See
+[the standard and migration guide](https://github.com/vpa-porting/semantic-porting-core/blob/v0.3.0/docs/smt/TERMINAL-STANDARD.md).
+
+Both backends use the shared `annotation Throws(exception: string);` on target automata.
+The core decodes it into `LibFunction.exceptionBinding`; `@Terminal` on actions alone controls
+termination. Java/ArkTS-specific throw annotations are no longer used.
