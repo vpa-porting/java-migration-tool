@@ -35,7 +35,7 @@ define action BYTES_LENGTH(data: array<int8>): int32;
 define action SUBSTRING_FROM(s: string, from: int32): string;
 
 // Exceptional outcomes. Each stands for "the call ends by throwing exactly this JDK exception":
-// the target specification realizes them with @JavaThrow, so the migrated code throws it too.
+// the target specification realizes them with @Throws, so the migrated code throws it too.
 annotation Terminal();
 @Terminal
 define action THROW_ARRAY_INDEX_OUT_OF_BOUNDS();

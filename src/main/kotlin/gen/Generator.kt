@@ -36,7 +36,7 @@ private val ACCESSOR_PARAM_REF = Regex("\\$([A-Za-z_][A-Za-z0-9_]*)")
 private const val JAVA_CONSTRUCTOR_ANNOTATION = "JavaConstructor"
 private const val JAVA_CONSTRUCTOR_ARG = "javaType"
 
-/** Name of the LSL `annotation JavaThrow(exception: string);` used to mark an automaton whose
+/** Name of the LSL `annotation Throws(exception: string);` used to mark an automaton whose
  * functions stand for an exceptional outcome rather than a call: realizing one emits
  * `throw new <exception>();` and ends the path (nothing after it is generated). This lets a
  * source specification state exactly when the original raises which JDK exception - e.g. an
@@ -84,13 +84,11 @@ private fun javaConstructorTypeOf(automaton: Automaton): String? =
  * [Generator], and the synthetic name may not even resolve to a real Java symbol.
  */
 fun hasSyntheticJavaBinding(automaton: Automaton): Boolean =
-    javaAccessorOf(automaton) != null || javaConstructorTypeOf(automaton) != null || javaThrowTypeOf(automaton) != null
+    javaAccessorOf(automaton) != null || javaConstructorTypeOf(automaton) != null || exceptionTypeOf(automaton) != null
 
-/** The exception class to throw for [automaton], if it was declared with `@JavaThrow(exception = "...")`. */
-private fun javaThrowTypeOf(automaton: Automaton): String? =
-    stringAnnotationArg(automaton, "JavaThrow", "exception")?.also {
-        require(it.isNotBlank()) { "JavaThrow exception type must not be blank" }
-    }
+/** The exception class to throw for [automaton], if it was declared with `@Throws(exception = "...")`. */
+private fun exceptionTypeOf(automaton: Automaton): String? =
+    ru.vpa.porting.lsl.ExceptionBinding.from(automaton)?.exceptionType
 
 private val NARROW_TYPES = setOf("byte", "short", "char")
 
@@ -163,7 +161,7 @@ class Generator {
 
     /** Emits one target call; returns true if it was a `throw`, which ends the path. */
     private fun generateTraceCall(trace: Trace, argsMap: Map<LVar, LExpr>): Boolean {
-        val exceptionType = javaThrowTypeOf(trace.function.automata)
+        val exceptionType = trace.function.exceptionBinding?.exceptionType
         if (exceptionType != null) {
             val arguments = trace.args.joinToString(", ") { arg ->
                 (argsMap[arg.name] ?: error("Unmapped exception argument ${arg.name}")).toJavaStr(resultMap)

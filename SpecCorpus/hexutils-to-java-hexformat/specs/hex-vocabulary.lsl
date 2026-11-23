@@ -33,7 +33,7 @@ define action REPLACE_CHAR(s: string, oldChar: char, newChar: char): string;
 define action LENGTH(s: string): int32;
 
 // Exceptional outcome: "the call ends by throwing exactly this JDK exception". The target
-// specification realizes it with @JavaThrow, so the migrated code throws it too.
+// specification realizes it with @Throws, so the migrated code throws it too.
 annotation Terminal();
 @Terminal
 define action THROW_ILLEGAL_ARGUMENT();

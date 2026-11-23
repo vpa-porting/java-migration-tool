@@ -8,25 +8,23 @@ import ru.vpa.porting.plan.TerminateNode
 import ru.vpa.porting.expr.LString
 
 class TerminalBindingTest {
-    @Test fun `generator rejects empty exception type`() {
+    @Test fun `shared parser rejects empty exception type`() {
         val root = Files.createTempDirectory("invalid-binding-")
         val file = root.resolve("invalid.lsl")
         try {
             Files.writeString(file, """
                 libsl "1.0.0";
                 library `InvalidBinding` version "1";
-                annotation JavaThrow(exception: string);
+                annotation Throws(exception: string);
                 annotation Terminal();
                 @Terminal
                 define action FAIL(): void;
                 type Target { }
-                @JavaThrow(exception = "")
+                @Throws(exception = "")
                 automaton Target: Target { fun fail(): void { action FAIL(); } }
             """.trimIndent())
             assertFailsWith<IllegalArgumentException> {
-                val function = LSLParser.parse(root.toString(), file.toString()).libFunctions.single()
-                val node = TerminateNode(function.traces.single(), emptyMap())
-                Generator().generate(function, node)
+                LSLParser.parse(root.toString(), file.toString())
             }
         } finally { Files.deleteIfExists(file); Files.deleteIfExists(root) }
     }
@@ -39,12 +37,12 @@ class TerminalBindingTest {
                 libsl "1.0.0";
                 library `TerminalBinding` version "1";
                 typealias string = string;
-                annotation JavaThrow(exception: string);
+                annotation Throws(exception: string);
                 type Target { }
                 annotation Terminal();
                 @Terminal
                 define action FAILURE(message: string): void;
-                @JavaThrow(exception = "java.lang.IllegalArgumentException")
+                @Throws(exception = "java.lang.IllegalArgumentException")
                 automaton Target: Target {
                     fun fail(message: string): void { action FAILURE(message); }
                 }

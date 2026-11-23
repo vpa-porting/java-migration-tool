@@ -75,7 +75,7 @@ fetch script.
 
 A source specification can say that a call *ends by throwing* a JDK exception: an action declared with `@Terminal` terminates its path, and
 nothing after it is part of the trace. The target specification realizes such an action with an
-automaton annotated `@JavaThrow(exception = "java.lang.ArrayIndexOutOfBoundsException")`, which the
+automaton annotated `@Throws(exception = "java.lang.ArrayIndexOutOfBoundsException")`, which the
 generator turns into `throw new java.lang.ArrayIndexOutOfBoundsException();` (no call, no import).
 This is how a migrated method reproduces *when* the original fails and with *which* exception class,
 e.g. a slice that leaves the array, a char above U+00FF, a delimiter that is a hex digit. Only
@@ -354,7 +354,7 @@ historical aggregate has not been changed. Normal reproduction:
 ## Shared semantic porting core
 
 SMT/SSA implementation is supplied by the Maven library
-`ru.vpa.porting:semantic-porting-core:0.2.2`, hosted at
+`ru.vpa.porting:semantic-porting-core:0.3.0`, hosted at
 `https://maven.pkg.github.com/vpa-porting/semantic-porting-core`.
 The repository is private: configure `gpr.user` and a `read:packages` token as `gpr.key`
 in your personal Gradle properties, or use GITHUB_ACTOR/GITHUB_TOKEN environment variables.
@@ -399,4 +399,8 @@ An HTTP 401/404 for the core POM indicates missing credentials or package access
 The shared terminal-action contract is defined in core 0.2.0:
 `@Terminal` belongs on action declarations. Names such as `THROW_*` and backend
 exception bindings do not imply termination. See
-[the standard and migration guide](https://github.com/vpa-porting/semantic-porting-core/blob/v0.2.0/docs/smt/TERMINAL-STANDARD.md).
+[the standard and migration guide](https://github.com/vpa-porting/semantic-porting-core/blob/v0.3.0/docs/smt/TERMINAL-STANDARD.md).
+
+Both backends use the shared `annotation Throws(exception: string);` on target automata.
+The core decodes it into `LibFunction.exceptionBinding`; `@Terminal` on actions alone controls
+termination. Java/ArkTS-specific throw annotations are no longer used.

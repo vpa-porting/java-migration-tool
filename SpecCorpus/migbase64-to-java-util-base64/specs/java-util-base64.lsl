@@ -4,7 +4,7 @@ library `JavaUtilBase64` version "21";
 import base64-vocabulary;
 
 annotation JavaConstructor(javaType: string);
-annotation JavaThrow(exception: string);
+annotation Throws(exception: string);
 
 type java.util.Base64 {}
 automaton java.util.Base64: java.util.Base64 {
@@ -80,7 +80,7 @@ automaton java.lang.reflect.Array: java.lang.reflect.Array {
 }
 
 type java.lang.ArrayIndexOutOfBoundsException {}
-@JavaThrow(exception = "java.lang.ArrayIndexOutOfBoundsException")
+@Throws(exception = "java.lang.ArrayIndexOutOfBoundsException")
 automaton java.lang.ArrayIndexOutOfBoundsException: java.lang.ArrayIndexOutOfBoundsException {
     fun raise() {
         action THROW_ARRAY_INDEX_OUT_OF_BOUNDS();
@@ -88,7 +88,7 @@ automaton java.lang.ArrayIndexOutOfBoundsException: java.lang.ArrayIndexOutOfBou
 }
 
 type java.lang.NegativeArraySizeException {}
-@JavaThrow(exception = "java.lang.NegativeArraySizeException")
+@Throws(exception = "java.lang.NegativeArraySizeException")
 automaton java.lang.NegativeArraySizeException: java.lang.NegativeArraySizeException {
     fun raise() {
         action THROW_NEGATIVE_ARRAY_SIZE();
@@ -96,7 +96,7 @@ automaton java.lang.NegativeArraySizeException: java.lang.NegativeArraySizeExcep
 }
 
 type java.lang.NullPointerException {}
-@JavaThrow(exception = "java.lang.NullPointerException")
+@Throws(exception = "java.lang.NullPointerException")
 automaton java.lang.NullPointerException: java.lang.NullPointerException {
     fun raise() {
         action THROW_NULL_POINTER();
@@ -112,7 +112,7 @@ automaton java.lang.String.Decoding: java.lang.String {
 
 
 type java.lang.StringIndexOutOfBoundsException {}
-@JavaThrow(exception = "java.lang.StringIndexOutOfBoundsException")
+@Throws(exception = "java.lang.StringIndexOutOfBoundsException")
 automaton java.lang.StringIndexOutOfBoundsException: java.lang.StringIndexOutOfBoundsException {
     fun raise() {
         action THROW_STRING_INDEX_OUT_OF_BOUNDS();
