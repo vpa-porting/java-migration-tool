@@ -14,7 +14,22 @@ fun LExpr.toJavaStr(varMap: Map<LVar, String>): String = when (this) {
     is LUnOp -> "$op${arg.toJavaStr(varMap)}"
     is LBinOp -> "(${left.enumAwareJava(varMap)} $op ${right.enumAwareJava(varMap)})"
     is LChar -> "(char) 0x%04x".format(value.code)
-    is LBool, is LInt, is LFloat, is LUInt8, is LUInt16, is LUInt32, is LUInt64, is LString -> toString()
+    is LInt8 -> "(byte) $value"
+    is LInt16 -> "(short) $value"
+    is LInt64 -> "${value}L"
+    is LFloat32 -> when {
+        value.isNaN() -> "Float.NaN"
+        value == Float.POSITIVE_INFINITY -> "Float.POSITIVE_INFINITY"
+        value == Float.NEGATIVE_INFINITY -> "Float.NEGATIVE_INFINITY"
+        else -> "${value}f"
+    }
+    is LFloat -> when {
+        value.isNaN() -> "Double.NaN"
+        value == Double.POSITIVE_INFINITY -> "Double.POSITIVE_INFINITY"
+        value == Double.NEGATIVE_INFINITY -> "Double.NEGATIVE_INFINITY"
+        else -> "${value}d"
+    }
+    is LBool, is LInt, is LUInt8, is LUInt16, is LUInt32, is LUInt64, is LString -> toString()
     is LArray -> "new ${type().toJavaType()}[]{${array.joinToString(", ") { it.toJavaStr(varMap) }}}"
     is LActionCall -> error("Action calls must be rendered through the Java binding adapter")
 }
