@@ -405,16 +405,15 @@ Both backends use the shared `annotation Throws(exception: string);` on target a
 The core decodes it into `LibFunction.exceptionBinding`; `@Terminal` on actions alone controls
 termination. Java/ArkTS-specific throw annotations are no longer used.
 
-## Pending typed numeric core upgrade
+## Typed numeric core
 
-This branch targets semantic-porting-core 0.4.0 (core PR #3). Until that reviewed
-version is published, use the existing explicit source-development option:
+This branch uses the published semantic-porting-core 0.4.0 Maven library.
+Ordinary builds resolve it from GitHub Packages using the package credentials
+configured above. Joint source development remains an explicit opt-in:
 
 ```sh
 ./gradlew -PsemanticCoreDir=/absolute/path/to/semantic-porting-core test
 ```
 
-The source checkout must contain the typed numeric literals from core PR #3.
-After publication, ordinary builds resolve the Maven library without this option.
 Java rendering preserves signed numeric widths and floating-point special values;
 unsigned types retain the existing unsupported Java policy.
