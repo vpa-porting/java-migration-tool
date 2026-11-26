@@ -404,3 +404,16 @@ exception bindings do not imply termination. See
 Both backends use the shared `annotation Throws(exception: string);` on target automata.
 The core decodes it into `LibFunction.exceptionBinding`; `@Terminal` on actions alone controls
 termination. Java/ArkTS-specific throw annotations are no longer used.
+
+## Typed numeric core
+
+This branch uses the published semantic-porting-core 0.4.0 Maven library.
+Ordinary builds resolve it from GitHub Packages using the package credentials
+configured above. Joint source development remains an explicit opt-in:
+
+```sh
+./gradlew -PsemanticCoreDir=/absolute/path/to/semantic-porting-core test
+```
+
+Java rendering preserves signed numeric widths and floating-point special values;
+unsigned types retain the existing unsupported Java policy.
